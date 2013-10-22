@@ -1,0 +1,9 @@
+Package: meetup
+Type: Package
+Title: tools to interact with meetup.com API and uncover meetup groups dynamics
+Version: 0.1
+Date: 2013-10-22
+Author: Quentin <quentin@counterinception.com>
+Maintainer: Quentin <quentin@counterinception.com>
+Description: tools to interact with meetup.com API and uncover meetup groups dynamics
+License: GPL
