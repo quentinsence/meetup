@@ -1,0 +1,91 @@
+```{r echo=FALSE}
+library(ggplot2)
+load("meetup.Rdata")
+```
+`r group` Meetup Group analysis
+========================================================
+
+`r dim(e)[1]` meetings with `r dim(rsvp)[1]` rsvps and `r length(levels(rsvp$member.member_id))` unique members rvsp'ed
+```{r echo=FALSE}
+summary(rsvp$response)
+#rsvp_limit waitlist_count capacity totalrsvp returning headcount
+ggplot(e,aes(UTC.time,100*(e$yes_rsvp_count+e$waitlist_count)/e$rsvp_limit)) + xlab('date of the event') + geom_line() + geom_point() + geom_smooth() + ggtitle('capacity percentage [(yes+waitlist)/rsvp limit] by event\nmore than 100% = overcapacity')
+#ggplot(e,aes(UTC.time,totalrsvp)) + xlab('date of the event') + geom_line() + geom_point()
+#ggplot(e,aes(UTC.time,rsvp_limit)) + xlab('date of the event') + geom_line() + geom_point()
+#ggplot(e,aes(UTC.time,waitlist_count)) + xlab('date of the event') + geom_line() + geom_point()
+ggplot(e,aes(UTC.time,100*returning/rsvp_limit)) + ggtitle('percentage of returning members') + xlab('date of the event') + geom_line() + geom_point()
+```
+
+```{r echo=FALSE} 
+#ggplot(e,aes(UTC.time,totalrsvp)) + geom_bar(stat="identity") + xlab('meeting date') +ylab('rsvp count') + ggtitle("rsvp vs meetings")
+#ggplot(e,aes(UTC.time,yes_rsvp_count)) + geom_line()
+```
+
+## how fast does it get full: time elapsed until all spots are taken
+```{r echo=FALSE}
+ggplot(e,aes(UTC.time,days.to.full)) + geom_line() + geom_point() + geom_smooth() + ylab('days from first to last "yes" rsvp') + xlab('event date') + ylim(c(0,max(e$days.to.full))) + ggtitle('days elapsed before event is full')
+ggplot(rsvpyes,aes(days.to.event)) + stat_ecdf() + scale_x_reverse() + ggtitle('cumulated "yes" rsvp versus days by event') + ylab('percentage of spots taken (1.00 = 100%)') + facet_wrap(~event.id)
+```
+
+What time and day the organiser is most likely to create a new event?
+----------------------
+most likely days of the week
+```{r echo=FALSE}
+summary(e$cwday)
+```
+most likely hours of the day
+```{r echo=FALSE}
+summary(e$ctimeofday)
+ggplot(e,aes(e$ctimeofday)) + geom_histogram(binwidth=1) + ggtitle('distribution of meetup event creation by time of day and day of week (1 hour bins)') + xlab('time of day') + facet_wrap(~cwday)
+```
+
+what time and day members usually rsvp
+----------------------
+```{r echo=FALSE}
+ggplot(rsvp,aes(wday)) + geom_histogram() + ggtitle('rsvp by day') + xlab('day of week')
+ggplot(rsvp,aes(timeofday)) + geom_histogram(binwidth=1) + ggtitle('rsvp by time of day (1 hour bins)') + xlab('time of day')
+ggplot(rsvp,aes(timeofday)) + geom_histogram(binwidth=1) + ggtitle('distribution of rsvp by time of day and day of week (1 hour bins)') + xlab('time of day') + facet_wrap(~wday)
+```
+
+how many members switched rsvp from yes to no
+-----------------------
+```{r echo=FALSE}
+aggregate(rsvp$mb4event,list(rsvp$event.id),function(x) {length(which(!is.na(x)))})
+```
+## how close to the event
+```{r echo=FALSE}
+ggplot(rsvp,aes(mb4event/3600)) + geom_histogram(binwidth=1) + ggtitle('switch rsvp to "no" versus time cumulated over all events') + xlab('hours before the event') + xlim(c(96,0))
+ggplot(rsvp,aes(mb4event/3600)) + geom_histogram(binwidth=1) + ggtitle('rsvp switch to "no" versus time by event') + xlab('hours before the event') + xlim(c(96,0)) + facet_wrap(~event.id)
+```
+
+## Are you on the waiting list? That is how close you are to make it
+on average `r trunc(mean(aggregate(rsvp$mb4event,list(rsvp$event.id),function(x) {length(which(!is.na(x)))})$x))` members pull out just hours before `r group` events.  
+Do not despair, there are `r length(about2fail)` members currently on the "yes" list who previously canceled multiple times within 6 hours of the event.  
+That is the waiting list in priority order, at the time that report was built `r length(waitlist$member.name)` members are waiting:
+```{r echo=FALSE}
+subset(waitlist,select=member.name)
+```
+
+groups and topics
+---------------------
+
+top 50 members with most rsvp to this group:
+```{r echo=FALSE}
+if(depth > 1) {
+  head(toprsvp,50)
+}
+```
+
+top 50 groups subscribed by members of `r group`:
+```{r echo=FALSE}
+if(depth > 1) {
+  head(dgroups,50)
+}
+```
+
+top 50 topics subscribed by members of `r group`:
+```{r echo=FALSE}
+if(depth > 1) {
+  head(dgroups,50)
+}
+```
