@@ -121,7 +121,7 @@ library(lubridate)
   e$lastyes      <- tapply(rsvpyes$created,rsvpyes$event.id,max)
   e$days.to.full <- (e$lastyes - e$firstyes) / 86400
   #how many days elapsed from first "yes" rsvp to last "yes" rsvp
-  e$days.to.full <- aggregate(rsvpyes$days.to.event,list(rsvpyes$event.id),max)$x
+  #e$days.to.full <- aggregate(rsvpyes$days.to.event,list(rsvpyes$event.id),max)$x
   e$to.full      <- paste(trunc(e$days.to.full),'days',trunc((e$days.to.full%%1) * 24),'hours',trunc((((e$days.to.full%%1)*24)%%1)*60),'mins')
   
   
