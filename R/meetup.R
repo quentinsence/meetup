@@ -4,6 +4,7 @@ library(pbapply)
 library(plyr)
 library(ggplot2)
 library(lubridate)
+library(reshape2)
 
   apikey <- 'missing'
   group  <- 'Data-Science-London' 
@@ -184,11 +185,17 @@ library(lubridate)
                                 sapply(x$topics, function(y){c(y$urlkey)}) 
                 })
     names(topics) <- levels(rsvp$member.member_id)
+    topics.by.event <- sapply(members.by.event,function(x) topics[x])
+    topics.by.event <- sapply(topics.by.event,function(x) as.character(unlist(x)))
+
     #for each member extract all groups subscribed
     groups <- lapply(mgroups, function(x) {
                                 sapply(x, function(y) {y$name})
                 })
     names(groups) <- levels(rsvp$member.member_id)
+    groups.by.event <- sapply(members.by.event,function(x) groups[x])
+    groups.by.event <- sapply(topics.by.event,function(x) as.character(unlist(x)))
+
     #subscribed topics list sorted by most popular
     dtopics <- as.data.frame(table(unlist(topics)))
     dtopics <- dtopics[order(dtopics$Freq,decreasing=TRUE),]
@@ -196,6 +203,26 @@ library(lubridate)
     #subscribed groups list sorted by most popular
     dgroups <- as.data.frame(table(unlist(groups)))
     dgroups <- dgroups[order(dgroups$Freq,decreasing=TRUE),]
+    
+    #members listed for the upcoming event
+    upmembers <- rsvp$member.member_id[rsvp$response == "yes" & as.numeric(rsvp$event.id)==max(as.numeric(rsvp$event.id))]
+    #groups also subscribed by members on the upcoming event
+    upgroups  <- groups[upmembers]
+    names(upgroups) <- upmembers
+    #build user-group adjacency matrix
+    g <- stack(upgroups)
+    g$Val <- 1
+    ug <-  dcast(g,values ~ ind, value.var = "Val",fill=0)
+    # ug$values should be set as rownames to the data.frame
+    rownames(ug) <- ug$values
+    ug$values <- NULL
+    
+    #user-user and group-group matrix
+    ugm <- as.matrix(ug)
+    gg <- ugm %*% t(ugm)
+    uu <- t(ugm) %*% ugm
+    diag(gg) <- NA
+    diag(uu) <- NA
     
     group.attr <- c("lon","visibility","organizer","link","state","join_mode","who","country","city","id","category","topics","timezone","group_photo","created","description","name","rating","urlname","lat","members")
     
