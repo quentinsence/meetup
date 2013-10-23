@@ -86,6 +86,6 @@ if(depth > 1) {
 top 50 topics subscribed by members of `r group`:
 ```{r echo=FALSE}
 if(depth > 1) {
-  head(dgroups,50)
+  head(dtopics,50)
 }
 ```

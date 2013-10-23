@@ -183,11 +183,12 @@ library(lubridate)
     topics <- lapply(members, function(x) {
                                 sapply(x$topics, function(y){c(y$urlkey)}) 
                 })
+    names(topics) <- levels(rsvp$member.member_id)
     #for each member extract all groups subscribed
     groups <- lapply(mgroups, function(x) {
                                 sapply(x, function(y) {y$name})
                 })
-    
+    names(groups) <- levels(rsvp$member.member_id)
     #subscribed topics list sorted by most popular
     dtopics <- as.data.frame(table(unlist(topics)))
     dtopics <- dtopics[order(dtopics$Freq,decreasing=TRUE),]
