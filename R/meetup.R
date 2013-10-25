@@ -7,7 +7,7 @@ library(lubridate)
 library(reshape2)
 
   apikey <- 'missing'
-  group  <- 'Data-Science-London' 
+  group  <- 'LondonQS'
   depth  <- 1
 
   #uncover the dynamics of a meetup group
@@ -129,6 +129,7 @@ library(reshape2)
   # ratio of new vs repeat members
   #count first timers, i.e. event members not found in previous events
   members.by.event <- tapply(rsvp$member.member_id,rsvp$event.id,list)
+  names(members.by.event) <- e$id
   e$returning[1] <- 0
   for(i in 2:dim(e)[1]) {
     e$returning[i] <- length(which(members.by.event[[i]] %in% unlist(members.by.event[c(1:i-1)]) == FALSE))
@@ -193,9 +194,22 @@ library(reshape2)
                                 sapply(x, function(y) {y$name})
                 })
     names(groups) <- levels(rsvp$member.member_id)
+    categories <- lapply(mgroups, function(x) {
+                                sapply(x, function(y) {y$category$name})
+                })
     groups.by.event <- sapply(members.by.event,function(x) groups[x])
-    groups.by.event <- sapply(topics.by.event,function(x) as.character(unlist(x)))
+    groups.by.event <- sapply(groups.by.event,function(x) as.character(unlist(x)))
 
+    categories.by.event <- sapply(members.by.event,function(x) categories[x])
+    categories.by.event <- sapply(categories.by.event,function(x) as.character(unlist(x)))
+
+    cbe <- stack(categories.by.event)
+    cbe$Val <- 1
+    cbesum <- as.data.frame(aggregate(cbe$Val,list(cbe$values,cbe$ind),sum))
+    names(cbesum) <- c('category','event','count')
+    #reorder in event number id
+    cbesum <- cbesum[order(as.numeric(as.character(cbesum$event))),]
+    
     #subscribed topics list sorted by most popular
     dtopics <- as.data.frame(table(unlist(topics)))
     dtopics <- dtopics[order(dtopics$Freq,decreasing=TRUE),]
