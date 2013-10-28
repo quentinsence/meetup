@@ -50,7 +50,8 @@ library(reshape2)
   url         <- paste('https://api.meetup.com/2/events?&sign=true&status=upcoming,past&group_urlname=',group,'&key=',apikey,sep="")
   ejson       <- fromJSON(getURL(url))
   e           <- ldply(ejson$results,data.frame)
-  
+
+  names(e)      <- e$id
   e$created     <- e$created/1000
   e$time        <- e$time/1000
   e$UTC.created <- epoch2UTC(e$created)
@@ -207,8 +208,21 @@ library(reshape2)
     cbe$Val <- 1
     cbesum <- as.data.frame(aggregate(cbe$Val,list(cbe$values,cbe$ind),sum))
     names(cbesum) <- c('category','event','count')
+    #normalise values to 100 by event for proportional stack graph
+    cbesum<- ddply(cbesum,"event",transform,pctcat = count/sum(count) * 100)
     #reorder in event number id
-    cbesum <- cbesum[order(as.numeric(as.character(cbesum$event))),]
+    cbesum$event <- as.numeric(as.character(cbesum$event))
+    cbesum <- cbesum[order(cbesum$event),]
+    #collapse categories < 1% otherwise graph is overloaded
+    topcat <- as.data.frame(tapply(cbesum$pctcat,cbesum$category, function(x) (sum(x)/22)))
+    names(topcat) <- c('pctaverage')
+    cbetop <- subset(cbesum,category%in%rownames(topcat[topcat$pctaverage > 1,]))
+    cbeother <- subset(cbesum,!category%in%rownames(topcat[topcat$pctaverage > 1,]))
+    cbetopsum <- rbind(cbetop,ddply(cbeother,"event",summarize,category="other",count=sum(count),pctcat=sum(pctcat)))
+    #insert date otherwise plots would place ticks based on event id differences
+    cbetopsum$UTC.time <- e[as.character(cbetopsum$event),"UTC.time"]
+    #reorder for top categories report
+    topcat <- as.data.frame(topcat[order(topcat$pctaverage,decreasing=TRUE),])
     
     #subscribed topics list sorted by most popular
     dtopics <- as.data.frame(table(unlist(topics)))

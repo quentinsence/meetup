@@ -22,7 +22,8 @@ ggplot(e,aes(UTC.time,100*returning/rsvp_limit)) +
   ggtitle('percentage of returning members') + 
   xlab('date of the event') + 
   geom_line() + 
-  geom_point()
+  geom_point() +
+  geom_smooth()
 ```
 
 ```{r echo=FALSE} 
@@ -115,22 +116,15 @@ categories groups and topics
 ```{r echo=FALSE}
 ggplot(cbetopsum,aes(UTC.time,pctcat,fill=category)) + 
   xlab('event date') +
-  ylab('percentage of groups') +
-  ggtitle('percentage of categories members also subscribe to by event') +
+  ylab('percentage of category by event') +
+  ggtitle('percentage of categories\nmembers subscribed by event') +
   geom_area(alpha=.7) + 
   scale_fill_brewer(palette="Set1")
 ```
 
-categories subscribed across all events
+distribution of categories subscribed across events (100% = all events)
 ```{r echo=FALSE}
 topcat
-```
-
-top 50 members with most rsvp to this group:
-```{r echo=FALSE}
-if(depth > 1) {
-  head(toprsvp,50)
-}
 ```
 
 top 50 groups subscribed by members of `r group`:
@@ -144,5 +138,14 @@ top 50 topics subscribed by members of `r group`:
 ```{r echo=FALSE}
 if(depth > 1) {
   head(dtopics,50)
+}
+```
+
+members
+---------------------
+top 50 members with most rsvp to this group:
+```{r echo=FALSE}
+if(depth > 1) {
+  head(toprsvp,50)
 }
 ```
